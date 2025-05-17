@@ -5,6 +5,7 @@ keywords = ["read ", "write ","do","while "]
 
 
 def tokenize(code):
+    code+=';'
     sentens = []
     words = []
     it = 0
@@ -488,7 +489,7 @@ def disasm(bk):
                 n = bk[it + 9]
                 match n:
                     case 0:
-                        res.append((f'set {m},{bktoi(bk[it + 10 : it + 18])}:uint',it,it+17))
+                        res.append((f'set {m},{bktoi(bk[it + 10 : it + 18])}:uint',it,it+18))
                         it += 18
                     case 1:
                         it1 = it + 10
@@ -496,7 +497,7 @@ def disasm(bk):
                         while bk[it1]:
                             resk += chr(bk[it1])
                             it1 += 1
-                        res.append((f'set {m},{resk}:uint',it,it1))
+                        res.append((f'set {m},{resk}:float',it,it1+1))
                         it = it1 + 1
             case 5:
                 m, n = bk[it + 1 : it + 9], bk[it + 9 : it + 17]
@@ -505,16 +506,16 @@ def disasm(bk):
                 it += 17
             case 6:
                 m = bk[it + 1 : it + 9]
-                res.append((f'read {bktoi(m)}',it,it+8))
+                res.append((f'read {bktoi(m)}',it,it+9))
                 it += 9
             case 7:
                 m = bk[it + 1 : it + 9]
-                res.append((f'write {bktoi(m)}',it,it+8))
+                res.append((f'write {bktoi(m)}',it,it+9))
                 it += 9
             case 8:
                 m,n=bk[it+1:it+9],bk[it+9:it+17]
                 m,n=bktoi(m),bktoi(n)
-                res.append((f'jif {m} -> {n}',it,it+16))
+                res.append((f'jif {m} -> {n}',it,it+17))
                 it+=17
             case _:
                 print(f'Disassembly failed: invalid character {bk[it]} on {it}')
@@ -523,4 +524,3 @@ def disasm(bk):
 #print(disasm(tobk(tokenize('$a$=1;do{write 1;}while $a$;'))))
 #print(disasm(tobk(tokenize('$a$=0xFF;do{write $a$;$a$=$a$-1;}while $a$;'))))
 #print(disasm(tobk(tokenize('read $a$;read $b$;$c$=$a$+$b$;write $c$;$d$=$c$+$a$;write $d$;'))))
-#print(tokenize('0x0;'))
