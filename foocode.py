@@ -3,9 +3,11 @@ import sys,time,json,os
 a=sys.argv
 def show(x):
     return ('%.20lf' % x).rstrip('0').rstrip('.')
-if len(a)<3:
-    print('Fooprog needs at least 2 arguments')
-    sys.exit(-1)
+def helper():
+    print('fooprog <command> <file>:\n - "c" for tokenizing and compiling a source\n - "t" for just tokenizing\n - "i" for interpreting bytecode\n - "h" for help'%a[1])
+if len(a)!=3:
+    helper()
+    sys.exit(0)
 if not os.path.exists(a[2]):
     print(f'File {a[2]} does not exist.')
     sys.exit(-2)
@@ -46,5 +48,16 @@ match a[1]:
             with open(a[2]+'.json','w') as fq:
                 json.dump(x,fq)
             print('Successfully saved tokens as %s'%(a[2]+'.json'))
+    case 'i':
+        if not os.path.exists(sys.argv[2]):
+            print(f'File {sys.argv[2]} does not exist.')
+            sys.exit(-2)
+        with open(sys.argv[2],'rb') as f:
+                x=f.read()
+        rs=runbk(x)
+        if isinstance(rs,int):
+            sys.exit(rs)
+        else:
+            sys.exit(0)
     case _:
-        print('Invalid argument %s:\n - "c" for tokenizing and compiling a source\n - "t" for just tokenizing'%a[1])
+        helper()
