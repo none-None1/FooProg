@@ -1,7 +1,7 @@
 operators = ["*", "/", "+", "-", "="]
 #pri = {"*": 3, "/": 3, "+": 2, "-": 2,'<':1,'>':1,'>=':'1','<=':1,'==':1 ,"=": 0}
 pri = {"*": 3, "/": 3, "+": 2, "-": 2,'==':1 ,"=": 0}
-keywords = ["read ", "write ","do","while "]
+keywords = ["read", "write","do","while","if"]
 
 
 def tokenize(code):
@@ -133,8 +133,8 @@ def tob(x):
     return res
 
 
-def tobk(val):  # 0 add 1 sub 2 mul 3 div 4 set 5 copy 6 read 7 write
-    res = b""
+def tobk(val):  # 0 add 1 sub 2 mul 3 div 4 set 5 copy 6 read 7 write 8 jif 9 jifn
+    res = bytearray(b"")
     vals = {}
     buf = 0
     xxx=[]
@@ -285,6 +285,16 @@ def tobk(val):  # 0 add 1 sub 2 mul 3 div 4 set 5 copy 6 read 7 write
                         return 3
                     xxx.append(('do',len(res)))
                     wdi+=1
+                elif wd[0]=='if':
+                    if st[wdi+1][1]!='var':
+                        print('C5: "if" only supports variables currently')
+                        return 5
+                    if st[wdi+2][0]!='{':
+                        print('C3: "if" must be followed by {')
+                        return 3
+                    xxx.append(('if',len(res)))
+                    res+=b'\x09'+tob(vals[st[wdi+1][0]])+b'\0'*8
+                    wdi+=1
             elif wd[1]=='lb':
                 if wd[0]=='}':
                     ppp=xxx.pop()
@@ -298,6 +308,10 @@ def tobk(val):  # 0 add 1 sub 2 mul 3 div 4 set 5 copy 6 read 7 write
                                 return 5
                             res+=b'\x08'+tob(vals[st[wdi+2][0]])+tob(ppp[1])
                             wdi+=2
+                        case 'if':
+                            op,pos=ppp
+                            res[pos+9:pos+17]=tob(len(res))
+                            
             wdi += 1
         while s:
             if s:
@@ -319,7 +333,7 @@ def tobk(val):  # 0 add 1 sub 2 mul 3 div 4 set 5 copy 6 read 7 write
                     buf += 1
                 else:
                     t.append(v)
-    return res
+    return bytes(res)
 
 
 def bktoi(bk):
@@ -428,8 +442,9 @@ def runbk(bk):
                 buf[bktoi(m)] = x
                 it += 9
             case 7:
+                p=lambda x:print('%.6g'%x) if isinstance(x,float) else print(x)
                 m = bk[it + 1 : it + 9]
-                print(buf[bktoi(m)])
+                p(buf[bktoi(m)])
                 it += 9
             case 8:
                 m,n=bk[it+1:it+9],bk[it+9:it+17]
@@ -438,6 +453,16 @@ def runbk(bk):
                 if m in buf:
                     resm=buf[m]
                 if resm!=0:
+                    it=n
+                else:
+                    it+=17
+            case 9:
+                m,n=bk[it+1:it+9],bk[it+9:it+17]
+                m,n=bktoi(m),bktoi(n)
+                resm=0
+                if m in buf:
+                    resm=buf[m]
+                if resm==0:
                     it=n
                 else:
                     it+=17
@@ -517,10 +542,16 @@ def disasm(bk):
                 m,n=bktoi(m),bktoi(n)
                 res.append((f'jif {m} -> {n}',it,it+17))
                 it+=17
+            case 9:
+                m,n=bk[it+1:it+9],bk[it+9:it+17]
+                m,n=bktoi(m),bktoi(n)
+                res.append((f'jifn {m} -> {n}',it,it+17))
+                it+=17
             case _:
                 print(f'Disassembly failed: invalid character {bk[it]} on {it}')
                 return None
     return res
+version='1.0.0'
 #print(disasm(tobk(tokenize('$a$=1;do{write 1;}while $a$;'))))
 #print(disasm(tobk(tokenize('$a$=0xFF;do{write $a$;$a$=$a$-1;}while $a$;'))))
 #print(disasm(tobk(tokenize('read $a$;read $b$;$c$=$a$+$b$;write $c$;$d$=$c$+$a$;write $d$;'))))

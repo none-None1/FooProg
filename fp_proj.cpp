@@ -88,12 +88,19 @@ void _instruction_08() {
         if (bool(mget(a))) q = b;
         else q += 17;
 }
-void * functions[] = { _instruction_00,_instruction_01 ,_instruction_02 ,_instruction_03 ,_instruction_04 ,_instruction_05 ,_instruction_06 ,_instruction_07 ,_instruction_08 };
+void _instruction_09() {
+        ull a = tob(q + 1), b = tob(q + 9);
+        if (!bool(mget(a))) q = b;
+        else q += 17;
+}
+void * functions[] = { (void*)_instruction_00,(void*)_instruction_01 ,(void*)_instruction_02 ,(void*)_instruction_03 ,(void*)_instruction_04 ,(void*)_instruction_05 ,(void*)_instruction_06 ,(void*)_instruction_07 ,(void*)_instruction_08 ,(void*)_instruction_09 };
 int main(int argc, char* argv[]) {
         if (argc < 2) {
                 cerr << "FooProg binary interpreter needs at least 1 argument" << endl;
                 return 0;
         }
+        if(string(argv[1])=="-h")return cerr << "fp <file>: Interpret the file\nfp -h: Help\nfp -v: Show version\n",0;
+        if(string(argv[1])=="-v")return cerr << "FooProg binary interpreter version " << FP_VER << "\n",0;
         ifstream fi(argv[1],ios::binary);
         if (!fi) {
                 cerr << "Cannot open file " << argv[1];
